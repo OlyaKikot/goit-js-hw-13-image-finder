@@ -6,29 +6,32 @@ const refs = {
   listImages: document.querySelector('.gallery'),
   loadMoreButton: document.querySelector('.button'),
 };
-let nameImages = '';
-refs.input.addEventListener('keydown', _.debounce(createImages, 500));
-function createImages(searchQuery) {
-  nameImages = searchQuery.target.value;
+let searchQuery = '';
+let page = 1;
+refs.input.addEventListener('input', _.debounce(createImages, 500));
+refs.loadMoreButton.addEventListener('click', onLoadMore);
 
-  fetchImages(nameImages).then(renderMarkup).catch(onError);
+function createImages() {
+  searchQuery = refs.input.value;
+  page = 1;
+  fetchImages(searchQuery).then(renderMarkup).catch(onError);
 }
 
 function onError(error) {
   console.log(error);
 }
 
-function renderMarkup(carts) {
+function renderMarkup(data) {
   let imagesHTML = '';
-
-  imagesHTML = carts.hits.map(cart => createImagesMarkup(cart));
+  imagesHTML = data.hits.map(cart => createImagesMarkup(cart)).join('');
   refs.listImages.insertAdjacentHTML('beforeend', imagesHTML);
 }
-refs.loadMoreButton.addEventListener('click', onLoadMore);
 
 function onLoadMore() {
-  fetchImages(nameImages).then(renderMarkup).catch(onError);
+  page += 1;
+  fetchImages(searchQuery, page).then(renderMarkup).catch(onError);
 }
+
 refs.loadMoreButton.scrollIntoView({
   behavior: 'smooth',
   block: 'end',
