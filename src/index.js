@@ -1,23 +1,46 @@
-import fetchImages from './apiService.js';
+import './sass/main.scss';
+import NewService from './apiService.js';
 import createImagesMarkup from '../src/templates/example.hbs';
+import { alert } from '../node_modules/@pnotify/core/dist/PNotify.js';
+// import * as PNotifyMobile from '../node_modules/@pnotify/mobile/dist/PNotifyMobile.js';
+import '@pnotify/core/dist/BrightTheme.css';
 var _ = require('lodash');
 const refs = {
   input: document.querySelector('.input'),
   listImages: document.querySelector('.gallery'),
   loadMoreButton: document.querySelector('.button'),
+  buttonTop: document.querySelector('.button-top'),
 };
-let searchQuery = '';
-let page = 1;
-refs.input.addEventListener('input', _.debounce(createImages, 500));
+
+const newService = new NewService();
+
+refs.input.addEventListener('input', _.debounce(createImages, 700));
 refs.loadMoreButton.addEventListener('click', onLoadMore);
+refs.buttonTop.addEventListener('click', onTop);
 
 function createImages() {
-  searchQuery = refs.input.value;
-  page = 1;
-  fetchImages(searchQuery).then(renderMarkup).catch(onError);
+  clearContainer();
+  newService
+    .fetchImages(refs.input.value)
+    .then(data => {
+      if (data.hits.length !== 0) renderMarkup(data);
+      else onError();
+    })
+    .catch(onError);
+  newService.resetPage();
 }
 
 function onError(error) {
+  console.log('ok');
+  // defaultModules.set(PNotifyMobile, {});
+
+  alert({
+    text: 'Пожалуйста, уточните критерии поиска',
+    type: 'error',
+    hide: true,
+    delay: 3000,
+  });
+
   console.log(error);
 }
 
@@ -27,12 +50,26 @@ function renderMarkup(data) {
   refs.listImages.insertAdjacentHTML('beforeend', imagesHTML);
 }
 
-function onLoadMore() {
-  page += 1;
-  fetchImages(searchQuery, page).then(renderMarkup).catch(onError);
+function onTop() {
+  refs.listImages.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start',
+  });
 }
 
-refs.loadMoreButton.scrollIntoView({
-  behavior: 'smooth',
-  block: 'end',
-});
+function onLoadMore() {
+  newService
+    .fetchImages(refs.input.value)
+    .then(renderMarkup)
+    .catch(onError)
+    .finally(() => {
+      refs.listImages.scrollIntoView({
+        behavior: 'smooth',
+        block: 'end',
+      });
+    });
+}
+
+function clearContainer() {
+  refs.listImages.innerHTML = '';
+}
