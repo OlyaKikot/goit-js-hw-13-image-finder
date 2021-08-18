@@ -6,17 +6,36 @@ import { alert } from '../node_modules/@pnotify/core/dist/PNotify.js';
 import '@pnotify/core/dist/BrightTheme.css';
 var _ = require('lodash');
 const refs = {
+  body: document.body,
   input: document.querySelector('.input'),
   listImages: document.querySelector('.gallery'),
   loadMoreButton: document.querySelector('.button'),
   buttonTop: document.querySelector('.button-top'),
+  overlay: document.querySelector('.lightbox'),
+  imgOriginal: document.querySelector('.lightbox__image'),
+  buttonClose: document.querySelector('button[data-action="close-lightbox"]'),
 };
 
 const newService = new NewService();
-
+refs.listImages.addEventListener('click', onImageClick);
 refs.input.addEventListener('input', _.debounce(createImages, 700));
 refs.loadMoreButton.addEventListener('click', onLoadMore);
 refs.buttonTop.addEventListener('click', onTop);
+refs.overlay.addEventListener('click', onCloseOverly);
+refs.buttonClose.addEventListener('click', onBtnCloseModal);
+window.addEventListener('keydown', onkeydown);
+
+function onBtnCloseModal() {
+  refs.overlay.classList.remove('is-open');
+  refs.imgOriginal.src = '';
+}
+
+function onCloseOverly(event) {
+  if (!event.target.classList.contains('lightbox__overlay')) {
+    return;
+  }
+  refs.overlay.classList.remove('is-open');
+}
 
 function createImages() {
   clearContainer();
@@ -31,9 +50,6 @@ function createImages() {
 }
 
 function onError(error) {
-  console.log('ok');
-  // defaultModules.set(PNotifyMobile, {});
-
   alert({
     text: 'Пожалуйста, уточните критерии поиска',
     type: 'error',
@@ -51,13 +67,13 @@ function renderMarkup(data) {
 }
 
 function onTop() {
-  refs.listImages.scrollIntoView({
+  refs.body.scrollIntoView({
     behavior: 'smooth',
     block: 'start',
   });
 }
 
-function onLoadMore() {
+async function onLoadMore() {
   newService
     .fetchImages(refs.input.value)
     .then(renderMarkup)
@@ -72,4 +88,44 @@ function onLoadMore() {
 
 function clearContainer() {
   refs.listImages.innerHTML = '';
+}
+
+function onImageClick(evt) {
+  evt.preventDefault();
+  const isGalleryImagesEl = evt.target.classList.contains('gallery__image');
+
+  if (!isGalleryImagesEl) {
+    return;
+  } else {
+    refs.overlay.classList.add('is-open');
+
+    refs.imgOriginal.src = evt.target.dataset.source;
+  }
+}
+
+function onkeydown(event) {
+  if (!refs.overlay.classList.contains('is-open')) return;
+
+  if (event.code === 'Escape') {
+    refs.overlay.classList.remove('is-open');
+  }
+
+  const currentEl = [...refs.gallery.children].find(
+    liEl => liEl.firstElementChild.href === refs.imgOriginal.src
+  );
+
+  if (event.code === 'ArrowRight') {
+    if (!currentEl.nextSibling) {
+      refs.imgOriginal.src =
+        refs.gallery.firstElementChild.firstElementChild.href;
+    } else refs.imgOriginal.src = currentEl.nextSibling.firstElementChild.href;
+  }
+
+  if (event.code === 'ArrowLeft') {
+    if (!currentEl.previousSibling) {
+      refs.imgOriginal.src =
+        refs.gallery.lastElementChild.firstElementChild.href;
+    } else
+      refs.imgOriginal.src = currentEl.previousSibling.firstElementChild.href;
+  }
 }

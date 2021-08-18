@@ -20,12 +20,24 @@
 <form class="search-form" id="search-form">
   <input class='input' type="text" name="query" autocomplete="off" placeholder="Search images..." />
 </form>
+<div class="container">
+  <ul class="gallery">
+  
+  </ul>
+</div>
 
-<ul class="gallery">
-
-</ul>
 <button class="button"> load more</button>
-<button class="button-top"> наверх</button>
+<button class="button-top"> Up</button>
+
+<div class="lightbox js-lightbox">
+  <div class="lightbox__overlay"></div>
+
+  <div class="lightbox__content">
+    <img class="lightbox__image" src="" alt="" />
+  </div>
+
+  <button type="button" class="lightbox__button" data-action="close-lightbox"></button>
+</div>
 
     <!-- Так добавляются фрагменты в главные HTML-файлы страниц. -->
     <include src="./partials/example.html"></include>
