@@ -2,27 +2,25 @@ import './sass/main.scss';
 import NewService from './apiService.js';
 import createImagesMarkup from '../src/templates/example.hbs';
 import { alert } from '../node_modules/@pnotify/core/dist/PNotify.js';
-// import * as PNotifyMobile from '../node_modules/@pnotify/mobile/dist/PNotifyMobile.js';
+
 import '@pnotify/core/dist/BrightTheme.css';
-var _ = require('lodash');
+
 const refs = {
   body: document.body,
   input: document.querySelector('.input'),
   listImages: document.querySelector('.gallery'),
-  loadMoreButton: document.querySelector('.button'),
-  buttonTop: document.querySelector('.button-top'),
   overlay: document.querySelector('.lightbox'),
   imgOriginal: document.querySelector('.lightbox__image'),
   buttonClose: document.querySelector('button[data-action="close-lightbox"]'),
+  sentinel: document.querySelector('.sentinel'),
+  searchForm: document.querySelector('.search-form'),
 };
 
 const newService = new NewService();
 refs.listImages.addEventListener('click', onImageClick);
-refs.input.addEventListener('input', _.debounce(createImages, 700));
-refs.loadMoreButton.addEventListener('click', onLoadMore);
-refs.buttonTop.addEventListener('click', onTop);
 refs.overlay.addEventListener('click', onCloseOverly);
 refs.buttonClose.addEventListener('click', onBtnCloseModal);
+refs.searchForm.addEventListener('submit', onSearch);
 window.addEventListener('keydown', onkeydown);
 
 function onBtnCloseModal() {
@@ -37,16 +35,23 @@ function onCloseOverly(event) {
   refs.overlay.classList.remove('is-open');
 }
 
-function createImages() {
+function createImages(searchRequest) {
   clearContainer();
+  newService.resetPage();
   newService
-    .fetchImages(refs.input.value)
+    .fetchImages(searchRequest)
     .then(data => {
       if (data.hits.length !== 0) renderMarkup(data);
       else onError();
     })
     .catch(onError);
-  newService.resetPage();
+}
+
+function onSearch(event) {
+  event.preventDefault();
+  const searchRequest = refs.input.value.trim();
+  console.log(searchRequest);
+  if (searchRequest !== '') createImages(searchRequest);
 }
 
 function onError(error) {
@@ -66,25 +71,21 @@ function renderMarkup(data) {
   refs.listImages.insertAdjacentHTML('beforeend', imagesHTML);
 }
 
-function onTop() {
-  refs.body.scrollIntoView({
-    behavior: 'smooth',
-    block: 'start',
+const onEntry = entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && newService.page > 1) {
+      console.log('entries:');
+      newService.fetchImages().then(renderMarkup).catch(onError);
+    }
   });
-}
+};
 
-async function onLoadMore() {
-  newService
-    .fetchImages(refs.input.value)
-    .then(renderMarkup)
-    .catch(onError)
-    .finally(() => {
-      refs.listImages.scrollIntoView({
-        behavior: 'smooth',
-        block: 'end',
-      });
-    });
-}
+const option = {
+  rootMargin: '150px',
+};
+
+const observer = new IntersectionObserver(onEntry, option);
+observer.observe(refs.sentinel);
 
 function clearContainer() {
   refs.listImages.innerHTML = '';
@@ -108,24 +109,5 @@ function onkeydown(event) {
 
   if (event.code === 'Escape') {
     refs.overlay.classList.remove('is-open');
-  }
-
-  const currentEl = [...refs.gallery.children].find(
-    liEl => liEl.firstElementChild.href === refs.imgOriginal.src
-  );
-
-  if (event.code === 'ArrowRight') {
-    if (!currentEl.nextSibling) {
-      refs.imgOriginal.src =
-        refs.gallery.firstElementChild.firstElementChild.href;
-    } else refs.imgOriginal.src = currentEl.nextSibling.firstElementChild.href;
-  }
-
-  if (event.code === 'ArrowLeft') {
-    if (!currentEl.previousSibling) {
-      refs.imgOriginal.src =
-        refs.gallery.lastElementChild.firstElementChild.href;
-    } else
-      refs.imgOriginal.src = currentEl.previousSibling.firstElementChild.href;
   }
 }
