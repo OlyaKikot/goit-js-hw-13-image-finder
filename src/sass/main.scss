@@ -2,41 +2,18 @@
   height: 39px;
 }
 
+body {
+  background-image: url('../images/bac.jpg');
+}
+
+.search-form {
+  text-align: center;
+}
 .input {
   margin-top: 50px;
-  margin-left: 20px;
   font-size: 30px;
   margin-bottom: 50px;
-}
-.button {
-  margin-left: 70px;
-  margin-bottom: 100px;
-  font-size: 30px;
-  color: #000;
-  background-color: rgb(72, 170, 228);
-  min-width: 300px;
-  border-radius: 10px;
-  border: none;
-  min-height: 50px;
-}
-.button-top {
-  margin-left: 70px;
-  margin-bottom: 100px;
-  font-size: 30px;
-  border-radius: 50%;
-  min-width: 10px;
-  min-height: 50px;
-  background-color: rgb(238, 101, 101);
-  border: none;
-}
-.button:hover {
-  background-color: rgb(21, 136, 212);
-  color: #fff;
-}
-.button-top:hover {
-  background-color: chartreuse;
-  border: none;
-  color: #fff;
+  min-width: 500px;
 }
 
 .gallery {

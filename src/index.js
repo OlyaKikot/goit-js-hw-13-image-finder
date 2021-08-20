@@ -50,7 +50,6 @@ function createImages(searchRequest) {
 function onSearch(event) {
   event.preventDefault();
   const searchRequest = refs.input.value.trim();
-  console.log(searchRequest);
   if (searchRequest !== '') createImages(searchRequest);
 }
 
@@ -74,7 +73,6 @@ function renderMarkup(data) {
 const onEntry = entries => {
   entries.forEach(entry => {
     if (entry.isIntersecting && newService.page > 1) {
-      console.log('entries:');
       newService.fetchImages().then(renderMarkup).catch(onError);
     }
   });
